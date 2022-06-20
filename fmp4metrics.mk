@@ -23,6 +23,7 @@ endif
 
 OBJS = main.o \
 	   metric.o \
+	   frames_per_second.o
 
 .PHONY: all libfmp4 linux darwin clean
 

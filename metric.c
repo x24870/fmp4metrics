@@ -1,8 +1,8 @@
 /*
- * Author: Pu-Chen Mao
- * Date:   2018/11/29
+ * Author: Mave Rick
+ * Date:   2022/06/20
  * File:   metric.c
- * Desc:   FLV stream metric interface implementation
+ * Desc:   FMP4 stream metric interface implementation
  */
 
 #include "metric.h"
@@ -77,18 +77,18 @@ bool metric_config(metric_t *metric)
 
 bool
 metrics_feed_data(metric_context_t *metric_contexts,
-                  const flv_tag_t  *tag,
+                  const fmp4_box_t  *box,
                   error_context_t  *errctx)
 {
     uint8_t mask = 0x00;
     size_t  idx  = 0;
 
     /* Sanity checks */
-    if (!metric_contexts || !tag || !errctx)
+    if (!metric_contexts || !box || !errctx)
         error_save_retval(errctx, EINVAL, false);
 
-    /* Set mask of media tag */
-    switch (tag->type)
+    /* Set mask of media box */
+    switch (box->type)
     {
         case 4:   mask = METRIC_MASK_CONTROL; break;
         case 8:   mask = METRIC_MASK_AUDIO;   break;
@@ -103,7 +103,7 @@ metrics_feed_data(metric_context_t *metric_contexts,
     {
         if (!metric_contexts[idx] || !(metrics_registry[idx]->masks & mask))
             continue;
-        if (!metrics_registry[idx]->emit(metric_contexts[idx], tag, errctx))
+        if (!metrics_registry[idx]->emit(metric_contexts[idx], box, errctx))
             return false;
     }
 

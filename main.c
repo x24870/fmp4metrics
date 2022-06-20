@@ -1,8 +1,8 @@
 /*
- * Author: Pu-Chen Mao
- * Date:   2018/11/28
+ * Author: Mave Rick
+ * Date:   2022/06/20
  * File:   main.c
- * Desc:   FLV stream metrics daemon
+ * Desc:   FMP4 stream metrics daemon
  */
 
 #include <arpa/inet.h>
@@ -16,7 +16,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include <flv.h>
+#include <fmp4.h>
 
 #include "error.h"
 #include "metric.h"
@@ -39,7 +39,7 @@ typedef struct context_t {
 static void usage(const char *command);
 static void signal_handler(int signum);
 static bool grafana_connect(const char *sink, error_context_t *errctx);
-static bool on_flv_tag(const flv_tag_t *tag, void *userdata,
+static bool on_fmp4_box(const fmp4_box_t *box, void *userdata,
         error_context_t *errctx);
 static bool timeout(const context_t *ctx);
 
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 {
     const char      *url    = NULL;
     const char      *sink   = NULL;
-    flv_t            flv    = NULL;
+    fmp4_t          fmp4    = NULL;
     context_t       _ctx    = {};
     context_t       *ctx    = &_ctx;
     error_context_t _errctx = {};
@@ -84,17 +84,17 @@ int main(int argc, char *argv[])
             if (!grafana_connect(sink, errctx))
                 error_save_break(errctx, errno);
 
-            /* Setup FLV stream context */
-            flv = flv_create(url, errctx);
-            error_save_break_if(!flv, errctx, errno);
+            /* Setup FMP4 stream context */
+            fmp4 = fmp4_create(url, errctx);
+            error_save_break_if(!fmp4, errctx, errno);
 
-            /* Connect to FLV stream source */
-            if (!flv_connect(flv, errctx))
+            /* Connect to FMP4 stream source */
+            if (!fmp4_connect(fmp4, errctx))
                 error_save_break(errctx, errno);
 
             /* Receive media frames for analysis & debug */
             ctx->last_callback_ms = current_time_milliseconds();
-            while (run && flv_recv(flv, on_flv_tag, ctx, errctx))
+            while (run && fmp4_recv(fmp4, on_fmp4_box, ctx, errctx))
                 error_save_break_if(timeout(ctx), errctx, ENODATA);
         }
         while (false);
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
         error_log_saved(errctx);
 
         /* Release acquired resources */
-        flv_destroy(&flv);
+        fmp4_destroy(&fmp4);
 
         /* Wait a little before reconnecting */
         if (run) usleep(RECONNECT_INTERVAL_MS * 1000);
@@ -244,21 +244,21 @@ CLEANUP:
 }
 
 static bool
-on_flv_tag(const flv_tag_t *tag,
+on_fmp4_box(const fmp4_box_t *box,
            void            *userdata,
            error_context_t *errctx)
 {
     context_t *ctx = NULL;
 
     /* Sanity checks */
-    if (!tag || !userdata || !errctx)
+    if (!box || !userdata || !errctx)
         error_save_retval(errctx, EINVAL, false);
 
     /* Cast userdata to context pointer */
     ctx = (context_t *)(userdata);
 
-    /* Feed FLV tag data to metrics */
-    if (!metrics_feed_data(ctx->metric_contexts, tag, errctx))
+    /* Feed FMP4 box data to metrics */
+    if (!metrics_feed_data(ctx->metric_contexts, box, errctx))
         return false;
 
     /* Update stream callback timestamp */

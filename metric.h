@@ -1,8 +1,8 @@
 /*
- * Author: Pu-Chen Mao
- * Date:   2018/11/29
+ * Author: Mave Rick
+ * Date:   2022/06/20
  * File:   metric.h
- * Desc:   FLV stream metric interface header
+ * Desc:   FMP4 stream metric interface header
  */
 
 #pragma once
@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <flv.h>
+#include <fmp4.h>
 
 #include "common.h"
 #include "error.h"
@@ -53,7 +53,7 @@ extern "C"
     typedef metric_context_t (*metric_context_functor_t)(
             error_context_t *errctx); // allocated context needs be free()'d
     typedef bool (*metric_emit_functor_t)(metric_context_t ctx,
-            const flv_tag_t *tag, error_context_t *errctx);
+            const fmp4_box_t *box, error_context_t *errctx);
 
     /* Transport context definition */
     typedef struct metric_t
@@ -78,7 +78,7 @@ extern "C"
             error_context_t *errctx);
     bool metric_config(metric_t *metric);
     bool metrics_feed_data(metric_context_t *metric_contexts,
-            const flv_tag_t *tag, error_context_t *errctx);
+            const fmp4_box_t *box, error_context_t *errctx);
     void metrics_fini(metric_context_t **metric_contexts);
 
 #ifdef __cplusplus

@@ -80,7 +80,6 @@ metrics_feed_data(metric_context_t *metric_contexts,
                   const fmp4_box_t  *box,
                   error_context_t  *errctx)
 {
-    uint8_t mask = 0x00;
     size_t  idx  = 0;
 
     /* Sanity checks */
@@ -88,21 +87,18 @@ metrics_feed_data(metric_context_t *metric_contexts,
         error_save_retval(errctx, EINVAL, false);
 
     /* Set mask of media box */
-    switch (box->type)
+    switch (ntohl(box->type))
     {
-        case 4:   mask = METRIC_MASK_CONTROL; break;
-        case 8:   mask = METRIC_MASK_AUDIO;   break;
-        case 9:   mask = METRIC_MASK_VIDEO;   break;
-        case 18:  mask = METRIC_MASK_SCRIPT;  break;
-        case 101: mask = METRIC_MASK_TIME;    break;
-        default:  mask = METRIC_MASK_UNKNOWN; break;
+	case 0x66747970: /*fprintf(stderr, "box is ftyp\n");*/ break;
+	case 0x6d6f6f76: /*fprintf(stderr, "box is moov\n");*/ break;
+ 	case 0x6d6f6f66: /*fprintf(stderr, "box is moof\n");*/ break;
+	case 0x6d646174: /*fprintf(stderr, "box is mdat\n");*/ break;
+	default: /*fprintf(stderr, "unknown box\n");*/ break;
     }
 
     /* Cycle through and invoke emit function for each metric */
     for (idx = 0; idx < registered_count; idx++)
     {
-        if (!metric_contexts[idx] || !(metrics_registry[idx]->masks & mask))
-            continue;
         if (!metrics_registry[idx]->emit(metric_contexts[idx], box, errctx))
             return false;
     }

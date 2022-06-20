@@ -63,12 +63,27 @@ frames_per_second_emit(metric_context_t  ctx,
     metric_ctx = (context_t *)(ctx);
 
     /* Increment the number of frames received */
-    switch (box->type)
+    switch (ntohl(box->type))
     {
-        case 8: ++(metric_ctx->audio_frames); break;
-        case 9: ++(metric_ctx->video_frames); break;
-        default: return true;
+	    case 0x6d6f6f66: break; // moof box
+	default: return true;
     }
+
+    /* move to moof child - mfhd box */
+    fmp4_box_t* curBox = (fmp4_box_t*)box->body;
+    //fprintf(stderr, "-mfhd SIZE: %d, TYPE: %u\n", ntohl(curBox->size), curBox->type);
+    /* move to mfhd sibling - traf box */
+    curBox = (fmp4_box_t*)( (uint8_t*)curBox + ntohl(curBox->size) );
+    //fprintf(stderr, "-traf SIZE: %d, TYPE: %u\n", ntohl(curBox->size), curBox->type);
+    /* move to traf child - tfhd */
+    curBox = (fmp4_box_t*)curBox->body;
+    //fprintf(stderr, "-tfhd SIZE: %d, TYPE: %u\n", ntohl(curBox->size), curBox->type);
+
+    /* check this track is video or audio */
+    fmp4_full_box_t* tfhd = (fmp4_full_box_t*)curBox;
+    uint32_t* track_id = (uint32_t*)tfhd->body;
+    if (ntohl(*track_id) == 1) { ++(metric_ctx->video_frames);
+    } else { ++(metric_ctx->audio_frames);  }
 
     /* Initialize tracking timestamps */
     now_ms = current_time_milliseconds();

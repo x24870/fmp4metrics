@@ -1,0 +1,7 @@
+#!/bin/sh
+
+#export QUEUE_TO_QUEUE_WALLCLOCK_LATENCY="video.bac1_bi_hi.hi.taipei.hinet.http.q2q_wallclock_latency,10000"
+#export FRAMES_PER_SECOND="local,1000"
+export FRAMES_PER_SECOND="local,1000"
+export FRAME_INTERARRIVAL_TIME="video2.jigentec.cnc.flvjs-l4.frame_interarrival_time,1000"
+export MEDIA_STREAM_BITRATE="bitrate,1000"

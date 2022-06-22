@@ -24,7 +24,8 @@ endif
 OBJS = main.o \
 	   metric.o \
 	   frames_per_second.o \
-	   frame_interarrival_time.o
+	   frame_interarrival_time.o \
+	   media_stream_bitrate.o
 
 .PHONY: all libfmp4 linux darwin clean
 

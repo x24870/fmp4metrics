@@ -25,7 +25,8 @@ OBJS = main.o \
 	   metric.o \
 	   frames_per_second.o \
 	   frame_interarrival_time.o \
-	   media_stream_bitrate.o
+	   media_stream_bitrate.o \
+	   q2q_stream_latency.o
 
 .PHONY: all libfmp4 linux darwin clean
 
